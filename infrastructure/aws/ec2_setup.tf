@@ -1,0 +1,1 @@
+# EC2 infrastructure configuration will go here
