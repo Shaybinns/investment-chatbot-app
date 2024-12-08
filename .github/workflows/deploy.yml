@@ -1,0 +1,42 @@
+name: Deploy to GKE
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  PROJECT_ID: copper-cider-444019-a2
+  GKE_CLUSTER: portfolioai-cluster
+  GKE_ZONE: us-central1-a
+  IMAGE: portfolioai
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: google-github-actions/auth@v0
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - uses: google-github-actions/setup-gcloud@v0
+
+    - run: |
+        gcloud --quiet auth configure-docker
+
+    - name: Build
+      run: |
+        docker build -t gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA ./backend
+        docker push gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA
+
+    - uses: google-github-actions/get-gke-credentials@v0
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_ZONE }}
+
+    - name: Deploy
+      run: |
+        kubectl set image deployment/portfolioai portfolioai=gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA
+        kubectl rollout status deployment/portfolioai
