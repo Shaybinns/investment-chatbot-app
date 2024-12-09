@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portfolioai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: portfolioai
+  template:
+    metadata:
+      labels:
+        app: portfolioai
+    spec:
+      containers:
+      - name: portfolioai
+        image: gcr.io/copper-cider-444019-a2/portfolioai:v1
+        ports:
+        - containerPort: 8000

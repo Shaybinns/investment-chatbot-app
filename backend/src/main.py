@@ -1,13 +1,11 @@
+﻿# src/main.py
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import auth, portfolio, user, ai
-from core.config import settings
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION
-)
+app = FastAPI(title="Investment Chatbot API")
 
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,12 +14,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(auth.router, prefix=settings.API_V1_STR)
-app.include_router(portfolio.router, prefix=settings.API_V1_STR)
-app.include_router(user.router, prefix=settings.API_V1_STR)
-app.include_router(ai.router, prefix=settings.API_V1_STR)
+# Import routes after FastAPI initialization
+from src.api.routes.api import router
+app.include_router(router, prefix="/api")
 
-@app.get("/health")
-def health_check():
-    return {"status": "healthy"}
+# Remove the uvicorn.run() call since we're using the CMD in Dockerfile
