@@ -1,1 +1,94 @@
-ZnJvbSB0eXBpbmcgaW1wb3J0IExpc3QsIERpY3QsIE9wdGlvbmFsCmZyb20gZGF0ZXRpbWUgaW1wb3J0IGRhdGV0aW1lCmZyb20gZmFzdGFwaSBpbXBvcnQgRmFzdEFQSSwgV2ViU29ja2V0CmZyb20gcHlkYW50aWMgaW1wb3J0IEJhc2VNb2RlbAoKY2xhc3MgTWVzc2FnZShCYXNlTW9kZWwpOgogICAgY29udGVudDogc3RyCiAgICB0aW1lc3RhbXA6IGRhdGV0aW1lCiAgICBzZW5kZXI6IHN0cgoKY2xhc3MgQUlCcmFpbjoKICAgIGRlZiBfX2luaXRfXyhzZWxmKToKICAgICAgICBzZWxmLmFwcCA9IEZhc3RBUEkoKQogICAgICAgIHNlbGYubWVzc2FnZXMgPSBbXSAgIyBTaW1wbGUgaW4tbWVtb3J5IHN0b3JhZ2UgZm9yIG5vdwogICAgICAgIAogICAgICAgIEBzZWxmLmFwcC53ZWJzb2NrZXQoIi93cyIpCiAgICAgICAgYXN5bmMgZGVmIHdlYnNvY2tldF9lbmRwb2ludCh3ZWJzb2NrZXQ6IFdlYlNvY2tldCk6CiAgICAgICAgICAgIGF3YWl0IHdlYnNvY2tldC5hY2NlcHQoKQogICAgICAgICAgICBwcmludCgiV2ViU29ja2V0IGNvbm5lY3Rpb24gZXN0YWJsaXNoZWQiKQogICAgICAgICAgICB3aGlsZSBUcnVlOgogICAgICAgICAgICAgICAgdHJ5OgogICAgICAgICAgICAgICAgICAgICMgUmVjZWl2ZSBtZXNzYWdlIGZyb20gY2xpZW50CiAgICAgICAgICAgICAgICAgICAgZGF0YSA9IGF3YWl0IHdlYnNvY2tldC5yZWNlaXZlX3RleHQoKQogICAgICAgICAgICAgICAgICAgIHByaW50KGYiUmVjZWl2ZWQgbWVzc2FnZToge2RhdGF9IikKICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAjIFByb2Nlc3MgbWVzc2FnZQogICAgICAgICAgICAgICAgICAgIHJlc3BvbnNlID0gYXdhaXQgc2VsZi5wcm9jZXNzX21lc3NhZ2UoZGF0YSkKICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAjIFNlbmQgcmVzcG9uc2UgYmFjawogICAgICAgICAgICAgICAgICAgIGF3YWl0IHdlYnNvY2tldC5zZW5kX3RleHQocmVzcG9uc2UpCiAgICAgICAgICAgICAgICAgICAgcHJpbnQoZiJTZW50IHJlc3BvbnNlOiB7cmVzcG9uc2V9IikKICAgICAgICAgICAgICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICAgICAgICAgICAgICBwcmludChmIkVycm9yIGluIHdlYnNvY2tldDoge2V9IikKICAgICAgICAgICAgICAgICAgICBicmVhawoKICAgIGFzeW5jIGRlZiBwcm9jZXNzX21lc3NhZ2Uoc2VsZiwgbWVzc2FnZTogc3RyKSAtPiBzdHI6CiAgICAgICAgIyBTdG9yZSBtZXNzYWdlCiAgICAgICAgc2VsZi5zdG9yZV9tZXNzYWdlKG1lc3NhZ2UpCiAgICAgICAgCiAgICAgICAgIyBHZW5lcmF0ZSBzaW1wbGUgcmVzcG9uc2UgZm9yIG5vdwogICAgICAgIHJlc3BvbnNlID0gc2VsZi5nZW5lcmF0ZV9yZXNwb25zZShtZXNzYWdlKQogICAgICAgIAogICAgICAgICMgU3RvcmUgcmVzcG9uc2UKICAgICAgICBzZWxmLnN0b3JlX21lc3NhZ2UocmVzcG9uc2UsIGlzX3Jlc3BvbnNlPVRydWUpCiAgICAgICAgCiAgICAgICAgcmV0dXJuIHJlc3BvbnNlCgogICAgZGVmIHN0b3JlX21lc3NhZ2Uoc2VsZiwgY29udGVudDogc3RyLCBpc19yZXNwb25zZTogYm9vbCA9IEZhbHNlKToKICAgICAgICBtZXNzYWdlID0gTWVzc2FnZSgKICAgICAgICAgICAgY29udGVudD1jb250ZW50LAogICAgICAgICAgICB0aW1lc3RhbXA9ZGF0ZXRpbWUubm93KCksCiAgICAgICAgICAgIHNlbmRlcj0iYm90IiBpZiBpc19yZXNwb25zZSBlbHNlICJ1c2VyIgogICAgICAgICkKICAgICAgICBzZWxmLm1lc3NhZ2VzLmFwcGVuZChtZXNzYWdlKQoKICAgIGRlZiBnZW5lcmF0ZV9yZXNwb25zZShzZWxmLCBtZXNzYWdlOiBzdHIpIC0+IHN0cjoKICAgICAgICAjIFNpbXBsZSByZXNwb25zZSBnZW5lcmF0aW9uIGZvciB0ZXN0aW5nCiAgICAgICAgaWYgImhlbGxvIiBpbiBtZXNzYWdlLmxvd2VyKCk6CiAgICAgICAgICAgIHJldHVybiAiSGVsbG8hIEhvdyBjYW4gSSBoZWxwIHlvdSB3aXRoIHlvdXIgaW52ZXN0bWVudHMgdG9kYXk/IgogICAgICAgIGVsaWYgImludmVzdCIgaW4gbWVzc2FnZS5sb3dlcigpOgogICAgICAgICAgICByZXR1cm4gIkkgY2FuIGhlbHAgeW91IHVuZGVyc3RhbmQgdmFyaW91cyBpbnZlc3RtZW50IG9wdGlvbnMuIFdoYXQgc3BlY2lmaWMgaW5mb3JtYXRpb24gYXJlIHlvdSBsb29raW5nIGZvcj8iCiAgICAgICAgZWxpZiAibWFya2V0IiBpbiBtZXNzYWdlLmxvd2VyKCk6CiAgICAgICAgICAgIHJldHVybiAiVGhlIG1hcmtldCBhbmFseXNpcyBmZWF0dXJlIHdpbGwgYmUgYXZhaWxhYmxlIHNvb24uIElzIHRoZXJlIGFueXRoaW5nIGVsc2UgeW91J2QgbGlrZSB0byBrbm93PyIKICAgICAgICBlbHNlOgogICAgICAgICAgICByZXR1cm4gIkkgdW5kZXJzdGFuZCB5b3UncmUgaW50ZXJlc3RlZCBpbiBpbnZlc3RtZW50cy4gQ291bGQgeW91IHBsZWFzZSBiZSBtb3JlIHNwZWNpZmljIGFib3V0IHdoYXQgeW91J2QgbGlrZSB0byBrbm93PyIKCiMgQ3JlYXRlIEZhc3RBUEkgYXBwIGluc3RhbmNlCmFwcCA9IEFJQnJhaW4oKS5hcHAKCiMgQWRkIGEgc2ltcGxlIHJvb3QgZW5kcG9pbnQgZm9yIHRlc3RpbmcKQGFwcC5nZXQoIi8iKQphc3luYyBkZWYgcm9vdCgpOgogICAgcmV0dXJuIHsibWVzc2FnZSI6ICJJbnZlc3RtZW50IENoYXRib3QgQnJhaW4gaXMgcnVubmluZyJ9
+from typing import List, Dict, Optional
+from datetime import datetime
+from fastapi import FastAPI, WebSocket
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import json
+
+class Message(BaseModel):
+    content: str
+    timestamp: datetime
+    sender: str
+
+class AIBrain:
+    def __init__(self):
+        self.app = FastAPI()
+        self.messages = []  # Simple in-memory storage for now
+        
+        # Add CORS middleware
+        self.app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+        
+        # Mount static files
+        self.app.mount("/static", StaticFiles(directory="static"), name="static")
+        
+        @self.app.websocket("/ws/chat/{user_id}")
+        async def websocket_endpoint(websocket: WebSocket, user_id: str):
+            await websocket.accept()
+            print(f"WebSocket connection established for user: {user_id}")
+            while True:
+                try:
+                    # Receive message from client
+                    data = await websocket.receive_text()
+                    print(f"Received message: {data}")
+                    
+                    # Parse the JSON message
+                    message_data = json.loads(data)
+                    message_text = message_data.get('text', '')
+                    
+                    # Process message
+                    response = await self.process_message(message_text)
+                    
+                    # Send response back in the expected format
+                    await websocket.send_text(json.dumps({
+                        "message": response
+                    }))
+                    print(f"Sent response: {response}")
+                except Exception as e:
+                    print(f"Error in websocket: {e}")
+                    break
+
+    async def process_message(self, message: str) -> str:
+        # Store message
+        self.store_message(message)
+        
+        # Generate simple response for now
+        response = self.generate_response(message)
+        
+        # Store response
+        self.store_message(response, is_response=True)
+        
+        return response
+
+    def store_message(self, content: str, is_response: bool = False):
+        message = Message(
+            content=content,
+            timestamp=datetime.now(),
+            sender="bot" if is_response else "user"
+        )
+        self.messages.append(message)
+
+    def generate_response(self, message: str) -> str:
+        # Simple response generation for testing
+        if "hello" in message.lower():
+            return "Hello! How can I help you with your investments today?"
+        elif "invest" in message.lower():
+            return "I can help you understand various investment options. What specific information are you looking for?"
+        elif "market" in message.lower():
+            return "The market analysis feature will be available soon. Is there anything else you'd like to know?"
+        else:
+            return "I understand you're interested in investments. Could you please be more specific about what you'd like to know?"
+
+# Create FastAPI app instance
+app = AIBrain().app
+
+# Add a simple root endpoint for testing
+@app.get("/")
+async def root():
+    return {"message": "Investment Chatbot Brain is running"}
