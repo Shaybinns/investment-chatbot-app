@@ -30,53 +30,69 @@ try:
     print("Redis connection successful")
 except Exception as e:
     print(f"Redis connection failed: {str(e)}")
+    redis_client = None
 
 # Initialize OpenAI handler
-openai_handler = OpenAIHandler(api_key=os.getenv('OPENAI_API_KEY'))
+try:
+    openai_handler = OpenAIHandler(api_key=os.getenv('OPENAI_API_KEY'))
+except Exception as e:
+    print(f"Failed to initialize OpenAI handler: {str(e)}")
+    raise
 
 # Store active connections
 active_connections: Dict[str, WebSocket] = {}
 
 @app.websocket("/ws/chat/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
-    await websocket.accept()
-    active_connections[user_id] = websocket
-    print(f"New connection established for user: {user_id}")
-    
     try:
+        await websocket.accept()
+        active_connections[user_id] = websocket
+        print(f"New connection established for user: {user_id}")
+        
         while True:
-            # Receive message from client
-            data = await websocket.receive_text()
-            print(f"Received message: {data}")
-            
-            # Parse the message
             try:
-                message = json.loads(data)
-                user_message = message.get('text', '')
-            except json.JSONDecodeError:
-                user_message = data
-            
-            print(f"Processing message: {user_message}")
-            
-            try:
+                # Receive message from client
+                data = await websocket.receive_text()
+                print(f"Received message: {data}")
+                
+                # Parse the message
+                try:
+                    message = json.loads(data)
+                    user_message = message.get('text', '')
+                except json.JSONDecodeError:
+                    user_message = data
+                
+                print(f"Processing message: {user_message}")
+                
                 # Get AI response
-                ai_response = await openai_handler.get_response(
-                    user_message,
-                    context=[]  # Simplified for testing
-                )
-                print(f"Got AI response: {ai_response[:100]}...")
+                try:
+                    ai_response = await openai_handler.get_response(
+                        user_message,
+                        context=[]  # Simplified for testing
+                    )
+                    print(f"Got AI response: {ai_response[:100]}...")
+                except Exception as e:
+                    print(f"Error getting AI response: {str(e)}")
+                    ai_response = "Error processing request"
+                
+                # Send response back to client
+                response = {
+                    "message": ai_response,
+                    "user_id": user_id
+                }
+                
+                await websocket.send_json(response)
+                
             except Exception as e:
-                print(f"Error getting AI response: {str(e)}")
-                ai_response = "Error processing request"
-            
-            # Send response back to client
-            response = {
-                "message": ai_response,
-                "user_id": user_id
-            }
-            
-            await websocket.send_json(response)
-            
+                print(f"Error processing message: {str(e)}")
+                try:
+                    await websocket.send_json({
+                        "message": "Error processing your message",
+                        "user_id": user_id
+                    })
+                except:
+                    pass
+                
     except Exception as e:
         print(f"WebSocket error: {str(e)}")
     finally:
