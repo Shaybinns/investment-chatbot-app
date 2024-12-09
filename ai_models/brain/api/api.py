@@ -1,9 +1,10 @@
-# api.py
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 import redis
 import json
+import os
 from typing import Dict
+from .openai_handler import OpenAIHandler
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -11,7 +12,7 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For development only - restrict in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -19,6 +20,9 @@ app.add_middleware(
 
 # Initialize Redis connection
 redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+
+# Initialize OpenAI handler
+openai_handler = OpenAIHandler(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Store active connections
 active_connections: Dict[str, WebSocket] = {}
@@ -36,15 +40,42 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
             # Parse the message
             try:
                 message = json.loads(data)
+                user_message = message.get('text', '')
             except json.JSONDecodeError:
-                message = {"text": data}
+                user_message = data
             
-            # Store message in Redis (optional)
-            redis_client.lpush(f"chat_history:{user_id}", json.dumps(message))
+            # Get conversation history from Redis
+            history_key = f"chat_history:{user_id}"
+            chat_history = [
+                json.loads(msg) 
+                for msg in redis_client.lrange(history_key, -5, -1)
+            ]  # Get last 5 messages
             
-            # Echo back for testing
+            # Get AI response
+            ai_response = await openai_handler.get_response(
+                user_message,
+                context=chat_history
+            )
+            
+            # Store messages in Redis
+            redis_client.lpush(
+                history_key,
+                json.dumps({
+                    "text": user_message,
+                    "sender": "user"
+                })
+            )
+            redis_client.lpush(
+                history_key,
+                json.dumps({
+                    "text": ai_response,
+                    "sender": "assistant"
+                })
+            )
+            
+            # Send response back to client
             response = {
-                "message": f"Received: {message.get('text', '')}",
+                "message": ai_response,
                 "user_id": user_id
             }
             
@@ -60,7 +91,6 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 async def root():
     return {"message": "Investment Chatbot API is running"}
 
-# For testing the server is up
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
