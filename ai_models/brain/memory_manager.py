@@ -1,101 +1,72 @@
-from typing import Dict, List, Optional
-from datetime import datetime, timedelta
+from typing import Dict, List
 import json
+from datetime import datetime
+from pathlib import Path
 
 class MemoryManager:
     def __init__(self):
-        # Initialize memory storage
-        self.user_contexts: Dict[str, Dict] = {}  # Stores user-specific data
-        self.conversation_history: Dict[str, List[Dict]] = {}  # Stores chat history
-        self.portfolio_memory: Dict[str, Dict] = {}  # Stores portfolio insights
-        self.retention_period = timedelta(days=30)  # How long to keep memory
-
-    def store_user_context(self, user_id: str, context_data: Dict) -> None:
-        """Store user-specific context like knowledge level, preferences"""
-        if user_id not in self.user_contexts:
-            self.user_contexts[user_id] = {}
-        
-        self.user_contexts[user_id].update({
-            **context_data,
-            'last_updated': datetime.now().isoformat()
-        })
-
-    def get_user_context(self, user_id: str) -> Optional[Dict]:
-        """Retrieve user context"""
-        return self.user_contexts.get(user_id)
-
-    def add_to_conversation(self, user_id: str, message: Dict) -> None:
-        """Add new message to conversation history"""
-        if user_id not in self.conversation_history:
-            self.conversation_history[user_id] = []
-        
-        self.conversation_history[user_id].append({
-            **message,
+        self.memory_file = Path('memory_store.json')
+        self.short_term_memory = []
+        self.load_memory()
+    
+    def load_memory(self):
+        """Load memory from persistent storage"""
+        if self.memory_file.exists():
+            with open(self.memory_file, 'r') as f:
+                self.long_term_memory = json.load(f)
+        else:
+            self.long_term_memory = []
+    
+    def save_memory(self):
+        """Save memory to persistent storage"""
+        with open(self.memory_file, 'w') as f:
+            json.dump(self.long_term_memory, f)
+    
+    def add_to_long_term_memory(self, data: Dict):
+        """Add information to long-term memory"""
+        self.long_term_memory.append({
+            **data,
             'timestamp': datetime.now().isoformat()
         })
+        self.save_memory()
+    
+    def get_relevant_context(self, query: str) -> str:
+        """Get relevant context from memory based on query"""
+        # Simple relevance scoring based on keyword matching
+        relevant_memories = []
+        query_words = set(query.lower().split())
         
-        # Trim history if too long (keep last 50 messages)
-        if len(self.conversation_history[user_id]) > 50:
-            self.conversation_history[user_id] = self.conversation_history[user_id][-50:]
-
-    def get_recent_conversation(self, user_id: str, message_count: int = 5) -> List[Dict]:
-        """Get recent conversation history"""
-        history = self.conversation_history.get(user_id, [])
-        return history[-message_count:]
-
-    def store_portfolio_insight(self, user_id: str, portfolio_id: str, insight: Dict) -> None:
-        """Store insights about user's portfolio"""
-        if user_id not in self.portfolio_memory:
-            self.portfolio_memory[user_id] = {}
+        for memory in self.long_term_memory:
+            memory_words = set(str(memory).lower().split())
+            relevance = len(query_words.intersection(memory_words))
+            if relevance > 0:
+                relevant_memories.append((relevance, memory))
         
-        self.portfolio_memory[user_id][portfolio_id] = {
-            **insight,
-            'last_updated': datetime.now().isoformat()
+        # Sort by relevance and format context
+        relevant_memories.sort(reverse=True)
+        context = [str(m[1]) for m in relevant_memories[:5]]
+        
+        return '\n'.join(context)
+    
+    def store_interaction(self, message: str, response: str):
+        """Store interaction in short-term memory and potentially long-term"""
+        interaction = {
+            'message': message,
+            'response': response,
+            'timestamp': datetime.now().isoformat()
         }
-
-    def get_portfolio_insights(self, user_id: str, portfolio_id: str) -> Optional[Dict]:
-        """Retrieve portfolio insights"""
-        return self.portfolio_memory.get(user_id, {}).get(portfolio_id)
-
-    def cleanup_old_data(self) -> None:
-        """Remove old data beyond retention period"""
-        current_time = datetime.now()
         
-        # Clean up user contexts
-        for user_id in list(self.user_contexts.keys()):
-            last_updated = datetime.fromisoformat(self.user_contexts[user_id]['last_updated'])
-            if current_time - last_updated > self.retention_period:
-                del self.user_contexts[user_id]
-
-        # Clean up conversation history
-        for user_id in list(self.conversation_history.keys()):
-            self.conversation_history[user_id] = [
-                msg for msg in self.conversation_history[user_id]
-                if current_time - datetime.fromisoformat(msg['timestamp']) <= self.retention_period
-            ]
-
-        # Clean up portfolio insights
-        for user_id in list(self.portfolio_memory.keys()):
-            for portfolio_id in list(self.portfolio_memory[user_id].keys()):
-                last_updated = datetime.fromisoformat(
-                    self.portfolio_memory[user_id][portfolio_id]['last_updated']
-                )
-                if current_time - last_updated > self.retention_period:
-                    del self.portfolio_memory[user_id][portfolio_id]
-
-    def export_user_data(self, user_id: str) -> Dict:
-        """Export all user data (for GDPR compliance)"""
-        return {
-            'context': self.user_contexts.get(user_id, {}),
-            'conversations': self.conversation_history.get(user_id, []),
-            'portfolio_insights': self.portfolio_memory.get(user_id, {})
-        }
-
-    def delete_user_data(self, user_id: str) -> None:
-        """Delete all user data (for GDPR compliance)"""
-        if user_id in self.user_contexts:
-            del self.user_contexts[user_id]
-        if user_id in self.conversation_history:
-            del self.conversation_history[user_id]
-        if user_id in self.portfolio_memory:
-            del self.portfolio_memory[user_id]
+        self.short_term_memory.append(interaction)
+        
+        # Keep short-term memory limited
+        if len(self.short_term_memory) > 10:
+            self.short_term_memory.pop(0)
+        
+        # Store important interactions in long-term memory
+        if self._is_important_interaction(interaction):
+            self.add_to_long_term_memory(interaction)
+    
+    def _is_important_interaction(self, interaction: Dict) -> bool:
+        """Determine if interaction should be stored in long-term memory"""
+        important_keywords = ['portfolio', 'strategy', 'goal', 'risk', 'investment']
+        return any(keyword in str(interaction).lower() for keyword in important_keywords)

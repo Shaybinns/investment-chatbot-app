@@ -1,94 +1,81 @@
-from typing import List, Dict, Optional
+import os
+from typing import Dict, List
 from datetime import datetime
-from fastapi import FastAPI, WebSocket
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import json
+import openai
+from .memory_manager import MemoryManager
+from .knowledge_base import KnowledgeBase
+from .data_providers import YahooFinanceProvider, PerplexityProvider, PortfolioOptimizer
 
-class Message(BaseModel):
-    content: str
-    timestamp: datetime
-    sender: str
-
-class AIBrain:
-    def __init__(self):
-        self.app = FastAPI()
-        self.messages = []  # Simple in-memory storage for now
+class Brain:
+    def __init__(self, openai_api_key: str):
+        self.openai_api_key = openai_api_key
+        openai.api_key = openai_api_key
+        self.memory = MemoryManager()
+        self.knowledge_base = KnowledgeBase()
         
-        # Add CORS middleware
-        self.app.add_middleware(
-            CORSMiddleware,
-            allow_origins=["*"],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
+        # Initialize data providers
+        self.yahoo_finance = YahooFinanceProvider()
+        self.perplexity = PerplexityProvider()
+        self.portfolio_optimizer = PortfolioOptimizer()
+        
+        # Load initial financial knowledge
+        self.load_base_knowledge()
+    
+    def load_base_knowledge(self):
+        """Load initial financial knowledge into memory"""
+        base_knowledge = self.knowledge_base.get_base_knowledge()
+        self.memory.add_to_long_term_memory(base_knowledge)
+    
+    def process_message(self, user_message: str) -> str:
+        # Get relevant context from memory
+        context = self.memory.get_relevant_context(user_message)
+        
+        # Get real-time data if needed
+        financial_data = self.get_relevant_financial_data(user_message)
+        
+        # Prepare messages for ChatGPT
+        messages = [
+            {"role": "system", "content": context},
+            {"role": "user", "content": user_message}
+        ]
+        
+        if financial_data:
+            messages.append({"role": "system", "content": f"Current financial data: {financial_data}"})
+        
+        # Get response from ChatGPT
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=messages,
+            temperature=0.7
         )
         
-        # Mount static files
-        self.app.mount("/static", StaticFiles(directory="static"), name="static")
+        # Store interaction in memory
+        self.memory.store_interaction(user_message, response.choices[0].message['content'])
         
-        @self.app.websocket("/ws/chat/{user_id}")
-        async def websocket_endpoint(websocket: WebSocket, user_id: str):
-            await websocket.accept()
-            print(f"WebSocket connection established for user: {user_id}")
-            while True:
-                try:
-                    # Receive message from client
-                    data = await websocket.receive_text()
-                    print(f"Received message: {data}")
-                    
-                    # Parse the JSON message
-                    message_data = json.loads(data)
-                    message_text = message_data.get('text', '')
-                    
-                    # Process message
-                    response = await self.process_message(message_text)
-                    
-                    # Send response back in the expected format
-                    await websocket.send_text(json.dumps({
-                        "message": response
-                    }))
-                    print(f"Sent response: {response}")
-                except Exception as e:
-                    print(f"Error in websocket: {e}")
-                    break
-
-    async def process_message(self, message: str) -> str:
-        # Store message
-        self.store_message(message)
+        return response.choices[0].message['content']
+    
+    def get_relevant_financial_data(self, message: str) -> Dict:
+        """Get relevant financial data from various providers based on message content"""
+        data = {}
         
-        # Generate simple response for now
-        response = self.generate_response(message)
+        # Get stock data if needed
+        if any(keyword in message.lower() for keyword in ['stock', 'price', 'market']):
+            data['market_data'] = self.yahoo_finance.get_relevant_data(message)
         
-        # Store response
-        self.store_message(response, is_response=True)
+        # Get research if needed
+        if any(keyword in message.lower() for keyword in ['research', 'analysis', 'news']):
+            data['research'] = self.perplexity.get_research(message)
         
-        return response
-
-    def store_message(self, content: str, is_response: bool = False):
-        message = Message(
-            content=content,
-            timestamp=datetime.now(),
-            sender="bot" if is_response else "user"
-        )
-        self.messages.append(message)
-
-    def generate_response(self, message: str) -> str:
-        # Simple response generation for testing
-        if "hello" in message.lower():
-            return "Hello! How can I help you with your investments today?"
-        elif "invest" in message.lower():
-            return "I can help you understand various investment options. What specific information are you looking for?"
-        elif "market" in message.lower():
-            return "The market analysis feature will be available soon. Is there anything else you'd like to know?"
-        else:
-            return "I understand you're interested in investments. Could you please be more specific about what you'd like to know?"
-
-# Create FastAPI app instance
-app = AIBrain().app
-
-# Add a simple root endpoint for testing
-@app.get("/")
-async def root():
-    return {"message": "Investment Chatbot Brain is running"}
+        # Get portfolio optimization if needed
+        if any(keyword in message.lower() for keyword in ['portfolio', 'optimize', 'allocation']):
+            data['portfolio'] = self.portfolio_optimizer.get_optimization(message)
+        
+        return data
+    
+    def learn_from_feedback(self, message: str, feedback: str):
+        """Update knowledge base based on user feedback"""
+        self.memory.add_to_long_term_memory({
+            'interaction': message,
+            'feedback': feedback,
+            'timestamp': datetime.now().isoformat()
+        })
