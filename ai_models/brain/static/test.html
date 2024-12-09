@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Chatbot Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #chat-container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background-color: #e3f2fd;
+            margin-left: 20%;
+        }
+        .bot-message {
+            background-color: #f5f5f5;
+            margin-right: 20%;
+        }
+        #input-container {
+            display: flex;
+            gap: 10px;
+        }
+        #message-input {
+            flex-grow: 1;
+            padding: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #status {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>Investment Chatbot Test Interface</h1>
+    <div id="status" class="disconnected">Status: Disconnected</div>
+    <div id="chat-container"></div>
+    <div id="input-container">
+        <input type="text" id="message-input" placeholder="Type your message here...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        let socket;
+        const userId = 'test-user-' + Math.random().toString(36).substr(2, 9);
+        
+        function connect() {
+            // Use the correct WebSocket URL based on your FastAPI server
+            socket = new WebSocket(`ws://localhost:8000/ws/chat/${userId}`);
+            
+            socket.onopen = function(e) {
+                document.getElementById('status').textContent = 'Status: Connected';
+                document.getElementById('status').className = 'connected';
+                console.log('WebSocket connection established');
+            };
+
+            socket.onmessage = function(event) {
+                console.log('Received message:', event.data);
+                const response = JSON.parse(event.data);
+                appendMessage('bot', response.message);
+            };
+
+            socket.onclose = function(event) {
+                document.getElementById('status').textContent = 'Status: Disconnected';
+                document.getElementById('status').className = 'disconnected';
+                console.log('WebSocket connection closed');
+                // Try to reconnect after 5 seconds
+                setTimeout(connect, 5000);
+            };
+
+            socket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        function appendMessage(sender, message) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = message;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (message && socket.readyState === WebSocket.OPEN) {
+                const messageData = {
+                    text: message
+                };
+                socket.send(JSON.stringify(messageData));
+                appendMessage('user', message);
+                input.value = '';
+            }
+        }
+
+        // Handle Enter key
+        document.getElementById('message-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Initial connection
+        connect();
+    </script>
+</body>
+</html>
