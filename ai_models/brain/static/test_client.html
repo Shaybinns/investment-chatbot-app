@@ -3,12 +3,54 @@
 <head>
     <title>Investment Chatbot Test Client</title>
     <style>
-        #messages { 
-            height: 300px; 
-            overflow-y: auto; 
-            border: 1px solid #ccc; 
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        #messages {
+            height: 500px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
             padding: 10px;
             margin: 10px 0;
+            background: #f9f9f9;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background: #e3f2fd;
+            margin-left: 20%;
+            margin-right: 5px;
+        }
+        .bot-message {
+            background: #f5f5f5;
+            margin-right: 20%;
+            margin-left: 5px;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        #messageInput {
+            flex-grow: 1;
+            padding: 8px;
+        }
+        button {
+            padding: 8px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
         }
     </style>
 </head>
@@ -16,8 +58,10 @@
     <div>
         <h2>Investment Chatbot Test Client</h2>
         <div id="messages"></div>
-        <input type="text" id="messageInput" placeholder="Type a message...">
-        <button onclick="sendMessage()">Send</button>
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Ask me about investments...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
     </div>
 
     <script>
@@ -27,29 +71,30 @@
         const messageInput = document.getElementById('messageInput');
 
         ws.onopen = function() {
-            appendMessage('System', 'Connected to server');
+            appendMessage('System', 'Connected to server', 'system');
         };
 
         ws.onmessage = function(event) {
             const data = JSON.parse(event.data);
-            appendMessage('Bot', data.message);
+            appendMessage('AI Advisor', data.message, 'bot');
         };
 
         ws.onclose = function() {
-            appendMessage('System', 'Disconnected from server');
+            appendMessage('System', 'Disconnected from server', 'system');
         };
 
         function sendMessage() {
             const message = messageInput.value;
             if (message) {
                 ws.send(JSON.stringify({ text: message }));
-                appendMessage('You', message);
+                appendMessage('You', message, 'user');
                 messageInput.value = '';
             }
         }
 
-        function appendMessage(sender, message) {
+        function appendMessage(sender, message, type) {
             const messageElement = document.createElement('div');
+            messageElement.className = `message ${type}-message`;
             messageElement.textContent = `${sender}: ${message}`;
             messagesDiv.appendChild(messageElement);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
