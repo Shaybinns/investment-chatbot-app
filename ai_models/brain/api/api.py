@@ -1,5 +1,7 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import redis
 import json
 import os
@@ -17,6 +19,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Debug print the API key (only first 5 chars)
 api_key = os.getenv('OPENAI_API_KEY')
@@ -41,6 +46,10 @@ except Exception as e:
 
 # Store active connections
 active_connections: Dict[str, WebSocket] = {}
+
+@app.get("/")
+async def root():
+    return FileResponse('static/test_client.html')
 
 @app.websocket("/ws/chat/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
@@ -99,10 +108,6 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
         if user_id in active_connections:
             del active_connections[user_id]
             print(f"Connection closed for user: {user_id}")
-
-@app.get("/")
-async def root():
-    return {"message": "Investment Chatbot API is running"}
 
 @app.get("/health")
 async def health_check():
