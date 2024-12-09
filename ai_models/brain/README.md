@@ -1,20 +1,13 @@
-# AI Investment Brain
+# AI Brain Component
 
-This component implements a sophisticated AI brain for the investment chatbot with the following features:
+## Overview
+Centralized AI brain using ChatGPT with persistent memory and multiple data sources.
 
-## Key Features
-- Persistent memory using Redis
-- Real-time market data integration (Yahoo Finance)
-- Portfolio optimization
-- Trading platform integration (Trading212)
-- Research capabilities (Perplexity API)
-- Continuous learning through feedback loops
-
-## Architecture
-- `brain.py`: Core AI brain implementation
-- `memory.py`: Memory management and persistence
-- `api.py`: FastAPI endpoints
-- Docker configuration for containerized deployment
+## Components
+- `brain.py`: Main AI controller
+- `memory_manager.py`: Manages short/long-term memory
+- `knowledge_base.py`: Base financial knowledge
+- `data_providers/`: External data integrations
 
 ## Setup
 1. Install dependencies:
@@ -22,46 +15,15 @@ This component implements a sophisticated AI brain for the investment chatbot wi
 pip install -r requirements.txt
 ```
 
-2. Configure environment variables:
+2. Set environment variables:
 ```bash
-REDIS_URL=redis://localhost:6379
-TRADING212_API_KEY=your_key
-PERPLEXITY_API_KEY=your_key
+export OPENAI_API_KEY='your-key'
 ```
 
-3. Run the API:
-```bash
-uvicorn api:app --reload
+## Usage
+```python
+from brain import Brain
+
+brain = Brain(openai_api_key='your-key')
+response = brain.process_message('What stocks should I invest in?')
 ```
-
-## API Endpoints
-- `/ws/chat/{user_id}`: WebSocket endpoint for chat
-- `/analyze/portfolio/{user_id}`: Portfolio analysis and optimization
-- `/analyze/market`: Market data analysis
-- `/feedback/{interaction_id}`: User feedback handling
-- `/memory/{user_id}`: Memory retrieval
-- `/research`: Multi-source research queries
-
-## Memory System
-The brain maintains different types of memories:
-- Conversation history
-- Market data analysis
-- Portfolio states
-- User feedback
-- Research findings
-
-## Learning Mechanism
-The system implements continuous learning through:
-1. User feedback collection
-2. Interaction analysis
-3. Performance monitoring
-4. Model updates based on accumulated data
-
-## Dependencies
-- FastAPI
-- Redis
-- yfinance
-- scipy
-- numpy
-- Trading212 API
-- Perplexity API
