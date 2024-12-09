@@ -4,6 +4,7 @@ from typing import Dict, Optional
 
 class OpenAIHandler:
     def __init__(self, api_key: str):
+        print(f"Initializing OpenAI handler with API key starting with: {api_key[:5] if api_key else 'None'}...")
         self.client = AsyncOpenAI(api_key=api_key)
         self.default_system_message = """You are an AI investment advisor with expertise in:
 - Portfolio management
@@ -27,6 +28,7 @@ Always remind users that this is educational content and not financial advice.""
         context: Optional[list] = None,
         system_message: Optional[str] = None
     ) -> str:
+        print("Building message array for OpenAI request...")
         messages = [
             {"role": "system", "content": system_message or self.default_system_message}
         ]
@@ -41,15 +43,18 @@ Always remind users that this is educational content and not financial advice.""
         
         # Add current message
         messages.append({"role": "user", "content": user_message})
+        print(f"Final message array: {json.dumps(messages, indent=2)}")
         
         try:
+            print("Sending request to OpenAI...")
             response = await self.client.chat.completions.create(
                 model="gpt-4-1106-preview",  # Using the latest GPT-4 model
                 messages=messages,
                 temperature=0.7,
                 max_tokens=500
             )
+            print("Received response from OpenAI")
             return response.choices[0].message.content
         except Exception as e:
             print(f"OpenAI API Error: {str(e)}")
-            return "I apologize, but I encountered an error processing your request. Please try again."
+            return f"Error: {str(e)}"
