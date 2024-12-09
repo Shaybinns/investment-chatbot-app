@@ -8,103 +8,245 @@
             max-width: 800px;
             margin: 20px auto;
             padding: 0 20px;
+            line-height: 1.6;
         }
+        
+        #connection-status {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .connecting {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        
         #messages {
             height: 500px;
             overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
             margin: 10px 0;
-            background: #f9f9f9;
+            background: #ffffff;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        
         .message {
             margin: 10px 0;
-            padding: 8px;
-            border-radius: 5px;
+            padding: 10px;
+            border-radius: 8px;
+            position: relative;
         }
+        
+        .message-time {
+            font-size: 0.75em;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
         .user-message {
             background: #e3f2fd;
             margin-left: 20%;
             margin-right: 5px;
         }
+        
         .bot-message {
             background: #f5f5f5;
             margin-right: 20%;
             margin-left: 5px;
         }
+        
+        .system-message {
+            background: #fff3cd;
+            margin: 10px 10%;
+            text-align: center;
+            font-style: italic;
+        }
+        
         .input-area {
             display: flex;
             gap: 10px;
             margin-top: 20px;
+            position: relative;
         }
+        
         #messageInput {
             flex-grow: 1;
-            padding: 8px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
         }
+        
+        #messageInput:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        
         button {
-            padding: 8px 20px;
+            padding: 12px 24px;
             background: #007bff;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
         }
+        
         button:hover {
             background: #0056b3;
+        }
+        
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
     <div>
         <h2>Investment Chatbot Test Client</h2>
+        <div id="connection-status" class="disconnected">Disconnected</div>
         <div id="messages"></div>
         <div class="input-area">
-            <input type="text" id="messageInput" placeholder="Ask me about investments...">
-            <button onclick="sendMessage()">Send</button>
+            <input type="text" id="messageInput" placeholder="Ask me about investments..." disabled>
+            <button onclick="sendMessage()" id="sendButton" disabled>Send</button>
         </div>
     </div>
 
     <script>
+        let ws = null;
         const userId = 'test-user-' + Math.random().toString(36).substr(2, 9);
-        const ws = new WebSocket(`ws://localhost:8000/ws/chat/${userId}`);
         const messagesDiv = document.getElementById('messages');
         const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const statusDiv = document.getElementById('connection-status');
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
 
-        ws.onopen = function() {
-            appendMessage('System', 'Connected to server', 'system');
-        };
+        function connect() {
+            if (ws) {
+                ws.close();
+            }
 
-        ws.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            appendMessage('AI Advisor', data.message, 'bot');
-        };
+            updateConnectionStatus('connecting');
+            ws = new WebSocket(`ws://localhost:8000/ws/chat/${userId}`);
 
-        ws.onclose = function() {
-            appendMessage('System', 'Disconnected from server', 'system');
-        };
+            ws.onopen = function() {
+                updateConnectionStatus('connected');
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                reconnectAttempts = 0;
+                appendMessage('System', 'Connected to server', 'system');
+            };
+
+            ws.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    appendMessage('AI Advisor', data.message, 'bot');
+                } catch (e) {
+                    console.error('Error parsing message:', e);
+                    appendMessage('System', 'Error processing message from server', 'system');
+                }
+            };
+
+            ws.onclose = function() {
+                updateConnectionStatus('disconnected');
+                messageInput.disabled = true;
+                sendButton.disabled = true;
+                appendMessage('System', 'Disconnected from server', 'system');
+                
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    const timeout = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
+                    appendMessage('System', `Reconnecting in ${timeout/1000} seconds... (Attempt ${reconnectAttempts}/${maxReconnectAttempts})`, 'system');
+                    setTimeout(connect, timeout);
+                } else {
+                    appendMessage('System', 'Failed to reconnect after multiple attempts. Please refresh the page.', 'system');
+                }
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                appendMessage('System', 'Connection error occurred', 'system');
+            };
+        }
+
+        function updateConnectionStatus(status) {
+            statusDiv.className = status;
+            switch(status) {
+                case 'connected':
+                    statusDiv.textContent = 'Connected';
+                    break;
+                case 'disconnected':
+                    statusDiv.textContent = 'Disconnected';
+                    break;
+                case 'connecting':
+                    statusDiv.textContent = 'Connecting...';
+                    break;
+            }
+        }
 
         function sendMessage() {
-            const message = messageInput.value;
-            if (message) {
-                ws.send(JSON.stringify({ text: message }));
-                appendMessage('You', message, 'user');
-                messageInput.value = '';
+            const message = messageInput.value.trim();
+            if (message && ws && ws.readyState === WebSocket.OPEN) {
+                try {
+                    ws.send(JSON.stringify({ text: message }));
+                    appendMessage('You', message, 'user');
+                    messageInput.value = '';
+                } catch (e) {
+                    console.error('Error sending message:', e);
+                    appendMessage('System', 'Error sending message', 'system');
+                }
             }
         }
 
         function appendMessage(sender, message, type) {
             const messageElement = document.createElement('div');
             messageElement.className = `message ${type}-message`;
-            messageElement.textContent = `${sender}: ${message}`;
+            
+            const timeElement = document.createElement('div');
+            timeElement.className = 'message-time';
+            timeElement.textContent = new Date().toLocaleTimeString();
+            
+            const contentElement = document.createElement('div');
+            contentElement.className = 'message-content';
+            contentElement.textContent = `${sender}: ${message}`;
+            
+            messageElement.appendChild(timeElement);
+            messageElement.appendChild(contentElement);
+            
             messagesDiv.appendChild(messageElement);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
         messageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 sendMessage();
             }
         });
+
+        // Start connection when page loads
+        connect();
     </script>
 </body>
 </html>
