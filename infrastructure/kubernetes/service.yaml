@@ -1,1 +1,24 @@
-# Kubernetes service configuration will go here
+apiVersion: v1
+kind: Service
+metadata:
+  name: investment-chatbot-service
+spec:
+  selector:
+    app: investment-chatbot
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+spec:
+  selector:
+    app: investment-chatbot
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
